@@ -1,5 +1,7 @@
+
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import numpy as np
 import cv2
 import json
@@ -322,4 +324,10 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         log_level="info"
+    )
+@app.get("/recognize-face")
+async def recognize_face_get():
+    return JSONResponse(
+        status_code=405,
+        content={"detail": "Use POST /recognize-face with an image and encodings."},
     )
