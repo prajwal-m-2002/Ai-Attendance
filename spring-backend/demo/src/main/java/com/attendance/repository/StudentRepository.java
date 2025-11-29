@@ -1,8 +1,14 @@
 package com.attendance.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.attendance.model.Student;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface StudentRepository extends JpaRepository<Student, Integer> {
+import java.util.Optional;
+
+@Repository
+public interface StudentRepository extends JpaRepository<Student, Long> {
+    
+    // Find student by roll number (for duplicate check during registration)
+    Optional<Student> findByRollNo(String rollNo);
 }
