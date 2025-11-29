@@ -18,60 +18,57 @@
         --blue-mid: #404d96;
         --pink-soft: #f3b1c5;
 
-        --shadow-strong: 0 18px 45px rgba(0, 0, 0, 0.55);
-        --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.45);
+        --shadow-strong: 0 18px 45px rgba(0, 0, 0, 0.7);
+        --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.55);
         --radius-card: 26px;
         --radius-lg: 999px;
       }
 
-      /* Light-ish theme (no white, colourful gradient) */
+      html,
+      body {
+        height: 100%;
+      }
+
+      /* Light theme (no pure white anywhere) */
       body[data-theme="light"] {
         --bg: linear-gradient(180deg, #6dc3bb 0%, #404d96 45%, #f3b1c5 100%);
-        --fg: #f7fbff;
-        --muted: #c7d3ff;
+        --fg: #f8fbff;
+        --muted: #c8d6ff;
 
-        --card-bg: linear-gradient(
-          180deg,
-          rgba(12, 18, 46, 0.96),
-          rgba(5, 9, 25, 0.98)
-        );
+        --card-bg: radial-gradient(circle at top left, #111827 0, #020617 55%);
 
-        --input-bg: rgba(16, 22, 54, 0.95);
-        --input-border: rgba(109, 195, 187, 0.9);
+        --input-bg: rgba(15, 23, 42, 0.96);
+        --input-border: rgba(148, 196, 255, 0.9);
 
         --status-ok-bg: rgba(45, 212, 191, 0.16);
-        --status-ok-border: rgba(45, 212, 191, 0.7);
+        --status-ok-border: rgba(45, 212, 191, 0.8);
         --status-ok-text: #bbf7f0;
 
         --status-err-bg: rgba(248, 113, 113, 0.18);
-        --status-err-border: rgba(248, 113, 113, 0.75);
+        --status-err-border: rgba(248, 113, 113, 0.85);
         --status-err-text: #fee2e2;
 
-        --nav-text: #f8fbff;
-        --nav-chip-bg: rgba(0, 0, 0, 0.22);
+        --nav-text: #f9fbff;
+        --nav-chip-bg: rgba(0, 0, 0, 0.28);
       }
 
-      /* Darker theme, still same palette */
+      /* Dark theme */
       body[data-theme="dark"] {
-        --bg: radial-gradient(circle at top, #1e273f 0, #050814 55%);
-        --fg: #e7efff;
+        --bg: radial-gradient(circle at top, #111827 0, #020617 55%);
+        --fg: #e5eeff;
         --muted: #9fb2ff;
 
-        --card-bg: linear-gradient(
-          180deg,
-          rgba(9, 15, 40, 0.96),
-          rgba(3, 7, 20, 0.98)
-        );
+        --card-bg: radial-gradient(circle at top left, #020617 0, #050816 55%);
 
-        --input-bg: rgba(6, 10, 28, 0.95);
-        --input-border: rgba(109, 195, 187, 0.85);
+        --input-bg: rgba(15, 23, 42, 0.98);
+        --input-border: rgba(109, 195, 187, 0.9);
 
-        --status-ok-bg: rgba(45, 212, 191, 0.2);
-        --status-ok-border: rgba(45, 212, 191, 0.85);
-        --status-ok-text: #d1fae5;
+        --status-ok-bg: rgba(34, 197, 94, 0.18);
+        --status-ok-border: rgba(34, 197, 94, 0.85);
+        --status-ok-text: #bbf7d0;
 
-        --status-err-bg: rgba(248, 113, 113, 0.25);
-        --status-err-border: rgba(248, 113, 113, 0.85);
+        --status-err-bg: rgba(248, 113, 113, 0.24);
+        --status-err-border: rgba(248, 113, 113, 0.9);
         --status-err-text: #fee2e2;
 
         --nav-text: #eaf4ff;
@@ -83,49 +80,67 @@
         color: var(--fg);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
           sans-serif;
+        font-size: 15px;
         padding-top: 90px;
+        margin: 0;
       }
 
+      /* NAVBAR */
       .navbar {
         background: linear-gradient(90deg, var(--navy-dark), var(--blue-mid));
+        border-bottom: 1px solid rgba(15, 23, 42, 0.8);
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7);
       }
 
       .navbar-brand {
         font-weight: 700;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.06em;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: var(--nav-text) !important;
+      }
+
+      .navbar-brand span.logo-text-main {
+        text-transform: uppercase;
+        font-size: 0.86rem;
       }
 
       .nav-chip {
         background: var(--nav-chip-bg);
         color: var(--nav-text);
         border-radius: 999px;
-        padding: 0.2rem 0.8rem;
-        font-size: 0.8rem;
+        padding: 0.25rem 0.9rem;
+        font-size: 0.78rem;
       }
 
       .page-wrapper {
-        min-height: 100vh;
+        min-height: calc(100vh - 90px);
       }
 
+      /* CARDS */
       .card-glass {
         background: var(--card-bg);
         border-radius: var(--radius-card);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(148, 196, 255, 0.25);
         box-shadow: var(--shadow-strong);
-        backdrop-filter: blur(22px);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
           border-color 0.18s ease-out;
       }
 
       .card-glass:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 26px 70px rgba(0, 0, 0, 0.8);
-        border-color: rgba(109, 195, 187, 0.7);
+        transform: translateY(-3px);
+        box-shadow: 0 26px 70px rgba(0, 0, 0, 0.9);
+        border-color: rgba(109, 195, 187, 0.75);
       }
 
       label {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
       }
 
       .form-control,
@@ -134,46 +149,63 @@
         border-color: var(--input-border);
         color: var(--fg);
         box-shadow: none;
+        font-size: 0.9rem;
       }
 
       .form-control::placeholder {
         color: var(--muted);
+        opacity: 0.8;
       }
 
+      /* BUTTONS – very visible, no white */
       .btn-primary {
         background: linear-gradient(90deg, var(--teal-main), var(--pink-soft));
         border: none;
         font-weight: 600;
         box-shadow: var(--shadow-soft);
-        border-radius: 18px;
-        color: #05101a;
+        border-radius: 20px;
+        color: #020617;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.82rem;
       }
 
-      .btn-primary:hover {
-        filter: brightness(1.05);
+      .btn-primary:hover,
+      .btn-primary:focus {
+        filter: brightness(1.08);
         transform: translateY(-1px);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85);
       }
 
       .btn-outline-light {
         border-radius: var(--radius-lg);
         border-width: 1.5px;
         color: var(--nav-text);
-        border-color: rgba(248, 250, 252, 0.8);
-        background: transparent;
+        border-color: rgba(248, 250, 252, 0.85);
+        background: rgba(15, 23, 42, 0.7);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.78rem;
       }
 
-      .btn-outline-light:hover {
-        background: rgba(109, 195, 187, 0.15);
+      .btn-outline-light:hover,
+      .btn-outline-light:focus {
+        background: rgba(109, 195, 187, 0.22);
         color: var(--nav-text);
+        border-color: rgba(109, 195, 187, 0.9);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
       }
 
+      /* VIDEO + CANVAS */
       video,
       canvas {
         border-radius: 24px;
-        border: 1px solid rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(15, 23, 42, 0.9);
         width: 100%;
         max-height: 260px;
         background: #020617;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8);
       }
 
       #status {
@@ -182,11 +214,12 @@
         margin-top: 4px;
       }
 
+      /* Status pills */
       .status-pill {
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        padding: 0.25rem 0.85rem;
+        padding: 0.25rem 0.9rem;
         border-radius: 999px;
         font-size: 0.8rem;
         animation: status-pop 0.22s ease-out forwards;
@@ -224,6 +257,22 @@
         align-items: center;
         gap: 0.35rem;
       }
+
+      h5,
+      h6 {
+        letter-spacing: 0.04em;
+      }
+
+      .section-title-accent {
+        color: var(--pink-soft);
+        font-weight: 700;
+      }
+
+      @media (max-width: 767.98px) {
+        .navbar-brand span.logo-text-main {
+          display: none;
+        }
+      }
     </style>
   </head>
 
@@ -233,8 +282,9 @@
       <div
         class="container-fluid px-4 d-flex justify-content-between align-items-center"
       >
-        <a href="/dashboard" class="navbar-brand mb-0 h1 text-decoration-none">
-          <span class="me-2">🧠</span> AI Attendance
+        <a href="/dashboard" class="navbar-brand mb-0 text-decoration-none">
+          <span>🧠</span>
+          <span class="logo-text-main">AI ATTENDANCE</span>
         </a>
 
         <div class="d-flex gap-2 align-items-center">
@@ -268,7 +318,7 @@
           <div class="card card-glass p-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <h5 class="mb-1">Live Camera</h5>
+                <h5 class="mb-1 section-title-accent">Live Camera</h5>
                 <div class="text-hint small">
                   Capture a clear face frame to register or mark attendance.
                 </div>
@@ -320,7 +370,7 @@
         <!-- Right: forms + status -->
         <div class="col-lg-6">
           <div class="card card-glass p-4 mb-4">
-            <h5 class="mb-3">Register Student</h5>
+            <h5 class="mb-3 section-title-accent">Register Student</h5>
             <div class="row g-3">
               <div class="col-12">
                 <label for="name" class="form-label">Name</label>
@@ -346,7 +396,7 @@
           </div>
 
           <div class="card card-glass p-3">
-            <h6 class="mb-1">System Status</h6>
+            <h6 class="mb-1 section-title-accent">System Status</h6>
             <div class="text-hint small mb-1">
               Live feedback from registration &amp; attendance actions.
             </div>
@@ -446,13 +496,17 @@
         canvas.height = video.videoHeight || 240;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            setStatus("Failed to capture image.", false);
-            return;
-          }
-          callback(blob);
-        }, "image/jpeg");
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              setStatus("Failed to capture image.", false);
+              return;
+            }
+            callback(blob);
+          },
+          "image/jpeg",
+          0.9
+        );
       }
 
       // Capture & Register
