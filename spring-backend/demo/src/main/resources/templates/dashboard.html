@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>AI Attendance System</title>
 
-    <!-- Bootstrap 5 CDN -->
+    <!-- Bootstrap 5 -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -12,75 +12,70 @@
 
     <style>
       :root {
-        /* Core palette from your screenshot */
-        --purple-deep: #9112bc;
-        --purple-soft: #ae75da;
-        --yellow-soft: #e8de8b;
-        --yellow-light: #fff8bd;
+        /* Palette from image */
+        --teal-main: #6dc3bb;
+        --navy-dark: #242c54;
+        --blue-mid: #404d96;
+        --pink-soft: #f3b1c5;
 
-        /* Shared tokens */
-        --shadow-strong: 0 18px 45px rgba(145, 18, 188, 0.32);
-        --shadow-soft: 0 10px 30px rgba(174, 117, 218, 0.35);
+        --shadow-strong: 0 18px 45px rgba(0, 0, 0, 0.55);
+        --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.45);
         --radius-card: 26px;
         --radius-lg: 999px;
       }
 
-      /* Light theme (default) */
+      /* Light-ish theme (no white, colourful gradient) */
       body[data-theme="light"] {
-        --bg: linear-gradient(
-          to bottom,
-          var(--yellow-light),
-          var(--yellow-soft)
-        );
-        --fg: #1f1030;
-        --muted: #6b5c82;
+        --bg: linear-gradient(180deg, #6dc3bb 0%, #404d96 45%, #f3b1c5 100%);
+        --fg: #f7fbff;
+        --muted: #c7d3ff;
 
         --card-bg: linear-gradient(
           180deg,
-          rgba(255, 255, 255, 0.9),
-          rgba(255, 255, 255, 0.98)
+          rgba(12, 18, 46, 0.96),
+          rgba(5, 9, 25, 0.98)
         );
 
-        --input-bg: rgba(255, 255, 255, 0.9);
-        --input-border: rgba(174, 117, 218, 0.6);
+        --input-bg: rgba(16, 22, 54, 0.95);
+        --input-border: rgba(109, 195, 187, 0.9);
 
-        --status-ok-bg: rgba(145, 210, 120, 0.12);
-        --status-ok-border: rgba(56, 142, 60, 0.5);
-        --status-ok-text: #256529;
-
-        --status-err-bg: rgba(220, 38, 38, 0.1);
-        --status-err-border: rgba(239, 68, 68, 0.6);
-        --status-err-text: #b91c1c;
-
-        --nav-text: #ffffff;
-        --nav-chip-bg: rgba(255, 255, 255, 0.15);
-      }
-
-      /* Darker / purple-heavy theme */
-      body[data-theme="dark"] {
-        --bg: radial-gradient(circle at top, #3d0c63 0, #13051d 45%);
-        --fg: #f9f5ff;
-        --muted: #c4b5fd;
-
-        --card-bg: linear-gradient(
-          180deg,
-          rgba(34, 8, 58, 0.96),
-          rgba(17, 6, 28, 0.98)
-        );
-
-        --input-bg: rgba(15, 6, 26, 0.95);
-        --input-border: rgba(174, 117, 218, 0.9);
-
-        --status-ok-bg: rgba(74, 222, 128, 0.16);
-        --status-ok-border: rgba(22, 163, 74, 0.7);
-        --status-ok-text: #bbf7d0;
+        --status-ok-bg: rgba(45, 212, 191, 0.16);
+        --status-ok-border: rgba(45, 212, 191, 0.7);
+        --status-ok-text: #bbf7f0;
 
         --status-err-bg: rgba(248, 113, 113, 0.18);
-        --status-err-border: rgba(248, 113, 113, 0.7);
+        --status-err-border: rgba(248, 113, 113, 0.75);
         --status-err-text: #fee2e2;
 
-        --nav-text: #ffffff;
-        --nav-chip-bg: rgba(0, 0, 0, 0.2);
+        --nav-text: #f8fbff;
+        --nav-chip-bg: rgba(0, 0, 0, 0.22);
+      }
+
+      /* Darker theme, still same palette */
+      body[data-theme="dark"] {
+        --bg: radial-gradient(circle at top, #1e273f 0, #050814 55%);
+        --fg: #e7efff;
+        --muted: #9fb2ff;
+
+        --card-bg: linear-gradient(
+          180deg,
+          rgba(9, 15, 40, 0.96),
+          rgba(3, 7, 20, 0.98)
+        );
+
+        --input-bg: rgba(6, 10, 28, 0.95);
+        --input-border: rgba(109, 195, 187, 0.85);
+
+        --status-ok-bg: rgba(45, 212, 191, 0.2);
+        --status-ok-border: rgba(45, 212, 191, 0.85);
+        --status-ok-text: #d1fae5;
+
+        --status-err-bg: rgba(248, 113, 113, 0.25);
+        --status-err-border: rgba(248, 113, 113, 0.85);
+        --status-err-text: #fee2e2;
+
+        --nav-text: #eaf4ff;
+        --nav-chip-bg: rgba(0, 0, 0, 0.35);
       }
 
       body {
@@ -88,15 +83,11 @@
         color: var(--fg);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
           sans-serif;
-        padding-top: 90px; /* space for fixed navbar */
+        padding-top: 90px;
       }
 
       .navbar {
-        background: linear-gradient(
-          90deg,
-          var(--purple-deep),
-          var(--purple-soft)
-        );
+        background: linear-gradient(90deg, var(--navy-dark), var(--blue-mid));
       }
 
       .navbar-brand {
@@ -119,7 +110,7 @@
       .card-glass {
         background: var(--card-bg);
         border-radius: var(--radius-card);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         box-shadow: var(--shadow-strong);
         backdrop-filter: blur(22px);
         transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
@@ -128,8 +119,8 @@
 
       .card-glass:hover {
         transform: translateY(-4px);
-        box-shadow: 0 26px 70px rgba(145, 18, 188, 0.45);
-        border-color: rgba(145, 18, 188, 0.7);
+        box-shadow: 0 26px 70px rgba(0, 0, 0, 0.8);
+        border-color: rgba(109, 195, 187, 0.7);
       }
 
       label {
@@ -150,31 +141,36 @@
       }
 
       .btn-primary {
-        background: linear-gradient(
-          90deg,
-          var(--purple-deep),
-          var(--purple-soft)
-        );
+        background: linear-gradient(90deg, var(--teal-main), var(--pink-soft));
         border: none;
         font-weight: 600;
         box-shadow: var(--shadow-soft);
         border-radius: 18px;
+        color: #05101a;
       }
 
       .btn-primary:hover {
-        filter: brightness(1.06);
+        filter: brightness(1.05);
         transform: translateY(-1px);
       }
 
       .btn-outline-light {
         border-radius: var(--radius-lg);
         border-width: 1.5px;
+        color: var(--nav-text);
+        border-color: rgba(248, 250, 252, 0.8);
+        background: transparent;
+      }
+
+      .btn-outline-light:hover {
+        background: rgba(109, 195, 187, 0.15);
+        color: var(--nav-text);
       }
 
       video,
       canvas {
         border-radius: 24px;
-        border: 1px solid rgba(0, 0, 0, 0.12);
+        border: 1px solid rgba(0, 0, 0, 0.6);
         width: 100%;
         max-height: 260px;
         background: #020617;
@@ -296,7 +292,7 @@
                 class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
               >
                 <span>📸</span>
-                <span>Capture & Register</span>
+                <span>Capture &amp; Register</span>
               </button>
 
               <button
@@ -309,7 +305,9 @@
                   role="status"
                   aria-hidden="true"
                 ></span>
-                <span id="attendanceBtnLabel">Capture & Mark Attendance</span>
+                <span id="attendanceBtnLabel"
+                  >Capture &amp; Mark Attendance</span
+                >
               </button>
             </div>
 
@@ -350,7 +348,7 @@
           <div class="card card-glass p-3">
             <h6 class="mb-1">System Status</h6>
             <div class="text-hint small mb-1">
-              Live feedback from registration & attendance actions.
+              Live feedback from registration &amp; attendance actions.
             </div>
             <div id="status" class="fw-semibold"></div>
           </div>
