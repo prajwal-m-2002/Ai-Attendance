@@ -19,7 +19,7 @@ public class Student {
     private String rollNo;
     private String className;
 
-    // Store JSON encoding as LONGTEXT (no LOB streaming)
-    @Column(columnDefinition = "LONGTEXT")
+    // Store JSON encoding as normal TEXT (not LOB)
+    @Column(columnDefinition = "TEXT")
     private String faceEncoding; // store JSON of encoding
 }
