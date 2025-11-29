@@ -22,6 +22,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/students")
+@CrossOrigin(origins = "*") // Allow frontend access
 public class StudentController {
 
     private final StudentRepository studentRepository;
@@ -29,7 +30,7 @@ public class StudentController {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${python.api.url}")
+    @Value("${python.api.url:http://localhost:8000}")
     private String pythonApiUrl;
 
     public StudentController(StudentRepository studentRepository,
@@ -42,8 +43,8 @@ public class StudentController {
 
     // 🔹 Simple GET to test mapping
     @GetMapping("/test")
-    public String test() {
-        return "StudentController is working!";
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("StudentController is working! Python API: " + pythonApiUrl);
     }
 
     // 🔹 Register student + store face encoding
@@ -55,8 +56,30 @@ public class StudentController {
             @RequestParam("faceImage") MultipartFile faceImage
     ) {
         try {
+            // Validate inputs
+            if (name == null || name.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Name is required");
+            }
+            if (rollNo == null || rollNo.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Roll number is required");
+            }
+            if (className == null || className.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Class name is required");
+            }
+            if (faceImage == null || faceImage.isEmpty()) {
+                return ResponseEntity.badRequest().body("Face image is required");
+            }
+
+            // Check if student already exists
+            Optional<Student> existing = studentRepository.findByRollNo(rollNo);
+            if (existing.isPresent()) {
+                return ResponseEntity.badRequest()
+                        .body("Student with roll number " + rollNo + " already exists");
+            }
+
             // 1) Call Python API to get encoding
             String url = pythonApiUrl + "/encode-face";
+            System.out.println("Calling Python API at: " + url);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -67,20 +90,67 @@ public class StudentController {
             HttpEntity<MultiValueMap<String, Object>> requestEntity =
                     new HttpEntity<>(body, headers);
 
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, requestEntity, String.class);
+            ResponseEntity<String> response;
+            try {
+                response = restTemplate.postForEntity(url, requestEntity, String.class);
+            } catch (Exception e) {
+                System.err.println("Error calling Python API: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body("Cannot connect to face recognition service. Please ensure Python service is running at " + pythonApiUrl);
+            }
+
+            // Check if Python API returned success
+            JsonNode responseNode = objectMapper.readTree(response.getBody());
+            if (!responseNode.has("success") || !responseNode.get("success").asBoolean()) {
+                String errorMsg = responseNode.has("message") 
+                    ? responseNode.get("message").asText() 
+                    : "Unknown error from face recognition service";
+                return ResponseEntity.badRequest().body("Face encoding failed: " + errorMsg);
+            }
 
             // 2) Save student + encoding JSON
             Student s = new Student();
-            s.setName(name);
-            s.setRollNo(rollNo);
-            s.setClassName(className);
+            s.setName(name.trim());
+            s.setRollNo(rollNo.trim());
+            s.setClassName(className.trim());
             s.setFaceEncoding(response.getBody());
 
             studentRepository.save(s);
 
-            return ResponseEntity.ok("Student registered successfully!");
+            System.out.println("Student registered successfully: " + name);
+            return ResponseEntity.ok()
+                    .body("Student " + name + " registered successfully with roll number " + rollNo);
 
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error during registration: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error during registration: " + e.getMessage());
+        }
+    }
+
+    // 🔹 Get all students
+    @GetMapping
+    public ResponseEntity<List<Student>> getAllStudents() {
+        try {
+            List<Student> students = studentRepository.findAll();
+            return ResponseEntity.ok(students);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // 🔹 Get student by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getStudentById(@PathVariable Long id) {
+        try {
+            Optional<Student> student = studentRepository.findById(id);
+            if (student.isPresent()) {
+                return ResponseEntity.ok(student.get());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -92,6 +162,9 @@ public class StudentController {
     private double[] extractEncodingArray(String json) throws Exception {
         JsonNode root = objectMapper.readTree(json);
         JsonNode encNode = root.get("encoding");
+        if (encNode == null || !encNode.isArray()) {
+            throw new Exception("Invalid encoding format in database");
+        }
         double[] arr = new double[encNode.size()];
         for (int i = 0; i < encNode.size(); i++) {
             arr[i] = encNode.get(i).asDouble();
@@ -105,21 +178,36 @@ public class StudentController {
             @RequestParam("faceImage") MultipartFile faceImage
     ) {
         try {
+            if (faceImage == null || faceImage.isEmpty()) {
+                return ResponseEntity.badRequest().body("Face image is required");
+            }
+
             List<Student> students = studentRepository.findAll();
             if (students.isEmpty()) {
-                return ResponseEntity.badRequest().body("No students registered.");
+                return ResponseEntity.badRequest()
+                        .body("No students registered. Please register students first.");
             }
 
             // Build list of encodings [[...], [...], ...]
             List<double[]> encList = new ArrayList<>();
             for (Student s : students) {
-                double[] arr = extractEncodingArray(s.getFaceEncoding());
-                encList.add(arr);
+                try {
+                    double[] arr = extractEncodingArray(s.getFaceEncoding());
+                    encList.add(arr);
+                } catch (Exception e) {
+                    System.err.println("Error extracting encoding for student " + s.getName() + ": " + e.getMessage());
+                }
+            }
+
+            if (encList.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body("No valid face encodings found in database");
             }
 
             String encJson = objectMapper.writeValueAsString(encList);
 
             String url = pythonApiUrl + "/recognize-face";
+            System.out.println("Calling Python API for recognition at: " + url);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -131,25 +219,32 @@ public class StudentController {
             HttpEntity<MultiValueMap<String, Object>> requestEntity =
                     new HttpEntity<>(body, headers);
 
-            ResponseEntity<String> pyResponse =
-                    restTemplate.postForEntity(url, requestEntity, String.class);
+            ResponseEntity<String> pyResponse;
+            try {
+                pyResponse = restTemplate.postForEntity(url, requestEntity, String.class);
+            } catch (Exception e) {
+                System.err.println("Error calling Python API: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body("Cannot connect to face recognition service");
+            }
 
             JsonNode root = objectMapper.readTree(pyResponse.getBody());
             if (!root.get("success").asBoolean()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Python error: " + root.get("message").asText());
+                        .body("Face recognition error: " + root.get("message").asText());
             }
 
             int bestIndex = root.get("best_index").asInt();
             double distance = root.get("distance").asDouble();
 
             // Threshold – tune this based on your images
-double threshold = 20.0;  // start here, you can adjust
+            double threshold = 15.0;  // Adjust based on testing
 
-if (distance > threshold) {
-    return ResponseEntity.badRequest()
-            .body("Face not confidently recognized. Distance=" + distance);
-}
+            if (distance > threshold) {
+                return ResponseEntity.badRequest()
+                        .body("Face not recognized. Distance: " + String.format("%.2f", distance) + 
+                              " (threshold: " + threshold + "). Please try again or register first.");
+            }
 
             Student matched = students.get(bestIndex);
 
@@ -158,7 +253,10 @@ if (distance > threshold) {
                     attendanceRepository.findByStudentAndDate(matched, today);
 
             if (existing.isPresent()) {
-                return ResponseEntity.ok("Already marked present for " + matched.getName());
+                return ResponseEntity.ok()
+                        .body("Attendance already marked for " + matched.getName() + 
+                              " (Roll: " + matched.getRollNo() + ") today at " + 
+                              existing.get().getTime());
             }
 
             Attendance att = new Attendance();
@@ -169,8 +267,30 @@ if (distance > threshold) {
 
             attendanceRepository.save(att);
 
-            return ResponseEntity.ok("Attendance marked for: " + matched.getName());
+            System.out.println("Attendance marked for: " + matched.getName());
+            return ResponseEntity.ok()
+                    .body("Attendance marked successfully for " + matched.getName() + 
+                          " (Roll: " + matched.getRollNo() + ") at " + att.getTime());
 
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error marking attendance: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error marking attendance: " + e.getMessage());
+        }
+    }
+
+    // 🔹 Delete student
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
+        try {
+            Optional<Student> student = studentRepository.findById(id);
+            if (student.isPresent()) {
+                studentRepository.deleteById(id);
+                return ResponseEntity.ok("Student deleted successfully");
+            } else {
+                return ResponseEntity.notFound().build();
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
