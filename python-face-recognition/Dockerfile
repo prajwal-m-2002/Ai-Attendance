@@ -22,3 +22,8 @@ EXPOSE 8000
 
 # Start FastAPI with Uvicorn
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose the port FastAPI will listen on (optional for Render)
+EXPOSE 8000
+
+# IMPORTANT: use Render's PORT env var, not a hard-coded 5000/8000
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]
