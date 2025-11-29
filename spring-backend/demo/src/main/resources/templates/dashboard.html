@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Attendance System</title>
+
+    <!-- Bootstrap 5 CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        /* Core palette from your screenshot */
+        --purple-deep: #9112bc;
+        --purple-soft: #ae75da;
+        --yellow-soft: #e8de8b;
+        --yellow-light: #fff8bd;
+
+        /* Shared tokens */
+        --shadow-strong: 0 18px 45px rgba(145, 18, 188, 0.32);
+        --shadow-soft: 0 10px 30px rgba(174, 117, 218, 0.35);
+        --radius-card: 26px;
+        --radius-lg: 999px;
+      }
+
+      /* Light theme (default) */
+      body[data-theme="light"] {
+        --bg: linear-gradient(
+          to bottom,
+          var(--yellow-light),
+          var(--yellow-soft)
+        );
+        --fg: #1f1030;
+        --muted: #6b5c82;
+
+        --card-bg: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.9),
+          rgba(255, 255, 255, 0.98)
+        );
+
+        --input-bg: rgba(255, 255, 255, 0.9);
+        --input-border: rgba(174, 117, 218, 0.6);
+
+        --status-ok-bg: rgba(145, 210, 120, 0.12);
+        --status-ok-border: rgba(56, 142, 60, 0.5);
+        --status-ok-text: #256529;
+
+        --status-err-bg: rgba(220, 38, 38, 0.1);
+        --status-err-border: rgba(239, 68, 68, 0.6);
+        --status-err-text: #b91c1c;
+
+        --nav-text: #ffffff;
+        --nav-chip-bg: rgba(255, 255, 255, 0.15);
+      }
+
+      /* Darker / purple-heavy theme */
+      body[data-theme="dark"] {
+        --bg: radial-gradient(circle at top, #3d0c63 0, #13051d 45%);
+        --fg: #f9f5ff;
+        --muted: #c4b5fd;
+
+        --card-bg: linear-gradient(
+          180deg,
+          rgba(34, 8, 58, 0.96),
+          rgba(17, 6, 28, 0.98)
+        );
+
+        --input-bg: rgba(15, 6, 26, 0.95);
+        --input-border: rgba(174, 117, 218, 0.9);
+
+        --status-ok-bg: rgba(74, 222, 128, 0.16);
+        --status-ok-border: rgba(22, 163, 74, 0.7);
+        --status-ok-text: #bbf7d0;
+
+        --status-err-bg: rgba(248, 113, 113, 0.18);
+        --status-err-border: rgba(248, 113, 113, 0.7);
+        --status-err-text: #fee2e2;
+
+        --nav-text: #ffffff;
+        --nav-chip-bg: rgba(0, 0, 0, 0.2);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        padding-top: 90px; /* space for fixed navbar */
+      }
+
+      .navbar {
+        background: linear-gradient(
+          90deg,
+          var(--purple-deep),
+          var(--purple-soft)
+        );
+      }
+
+      .navbar-brand {
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .nav-chip {
+        background: var(--nav-chip-bg);
+        color: var(--nav-text);
+        border-radius: 999px;
+        padding: 0.2rem 0.8rem;
+        font-size: 0.8rem;
+      }
+
+      .page-wrapper {
+        min-height: 100vh;
+      }
+
+      .card-glass {
+        background: var(--card-bg);
+        border-radius: var(--radius-card);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: var(--shadow-strong);
+        backdrop-filter: blur(22px);
+        transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
+          border-color 0.18s ease-out;
+      }
+
+      .card-glass:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 26px 70px rgba(145, 18, 188, 0.45);
+        border-color: rgba(145, 18, 188, 0.7);
+      }
+
+      label {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .form-control,
+      .form-control:focus {
+        background: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--fg);
+        box-shadow: none;
+      }
+
+      .form-control::placeholder {
+        color: var(--muted);
+      }
+
+      .btn-primary {
+        background: linear-gradient(
+          90deg,
+          var(--purple-deep),
+          var(--purple-soft)
+        );
+        border: none;
+        font-weight: 600;
+        box-shadow: var(--shadow-soft);
+        border-radius: 18px;
+      }
+
+      .btn-primary:hover {
+        filter: brightness(1.06);
+        transform: translateY(-1px);
+      }
+
+      .btn-outline-light {
+        border-radius: var(--radius-lg);
+        border-width: 1.5px;
+      }
+
+      video,
+      canvas {
+        border-radius: 24px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        width: 100%;
+        max-height: 260px;
+        background: #020617;
+      }
+
+      #status {
+        min-height: 32px;
+        font-size: 0.9rem;
+        margin-top: 4px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.25rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        animation: status-pop 0.22s ease-out forwards;
+        opacity: 0;
+        transform: translateY(3px);
+      }
+
+      .status-ok-pill {
+        background: var(--status-ok-bg);
+        border: 1px solid var(--status-ok-border);
+        color: var(--status-ok-text);
+      }
+
+      .status-error-pill {
+        background: var(--status-err-bg);
+        border: 1px solid var(--status-err-border);
+        color: var(--status-err-text);
+      }
+
+      @keyframes status-pop {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .text-hint {
+        color: var(--muted);
+      }
+
+      .theme-toggle-btn {
+        border-radius: 999px;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+    </style>
+  </head>
+
+  <body data-theme="light">
+    <!-- NAVBAR -->
+    <nav class="navbar fixed-top navbar-dark shadow-sm">
+      <div
+        class="container-fluid px-4 d-flex justify-content-between align-items-center"
+      >
+        <a href="/dashboard" class="navbar-brand mb-0 h1 text-decoration-none">
+          <span class="me-2">🧠</span> AI Attendance
+        </a>
+
+        <div class="d-flex gap-2 align-items-center">
+          <span class="nav-chip d-none d-md-inline">
+            Spring Boot • Python • OpenCV
+          </span>
+
+          <!-- Theme Toggle -->
+          <button
+            id="themeToggle"
+            type="button"
+            class="btn btn-sm btn-outline-light theme-toggle-btn"
+          >
+            <span id="themeIcon">☀️</span>
+            <span id="themeLabel" class="d-none d-sm-inline">Light</span>
+          </button>
+
+          <!-- Attendance Page Button -->
+          <a href="/attendance" class="btn btn-sm btn-outline-light">
+            Attendance
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="page-wrapper container py-4">
+      <div class="row g-4 align-items-start">
+        <!-- Left: webcam + buttons -->
+        <div class="col-lg-6">
+          <div class="card card-glass p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5 class="mb-1">Live Camera</h5>
+                <div class="text-hint small">
+                  Capture a clear face frame to register or mark attendance.
+                </div>
+              </div>
+              <button id="startCam" class="btn btn-sm btn-outline-light">
+                Start Camera
+              </button>
+            </div>
+
+            <video id="video" autoplay playsinline></video>
+            <canvas
+              id="canvas"
+              width="320"
+              height="240"
+              style="display: none"
+            ></canvas>
+
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+              <button
+                id="captureRegister"
+                class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+              >
+                <span>📸</span>
+                <span>Capture & Register</span>
+              </button>
+
+              <button
+                id="captureAttendance"
+                class="btn btn-outline-light flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+              >
+                <span
+                  class="spinner-border spinner-border-sm d-none"
+                  id="attendanceSpinner"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                <span id="attendanceBtnLabel">Capture & Mark Attendance</span>
+              </button>
+            </div>
+
+            <div class="mt-3 small text-hint">
+              Tip: Face should be well lit, straight, and centered in the frame.
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: forms + status -->
+        <div class="col-lg-6">
+          <div class="card card-glass p-4 mb-4">
+            <h5 class="mb-3">Register Student</h5>
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="name" class="form-label">Name</label>
+                <input
+                  id="name"
+                  class="form-control"
+                  placeholder="e.g. Prajwal"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="rollNo" class="form-label">Roll No</label>
+                <input id="rollNo" class="form-control" placeholder="e.g. 1" />
+              </div>
+              <div class="col-md-6">
+                <label for="className" class="form-label">Class</label>
+                <input
+                  id="className"
+                  class="form-control"
+                  placeholder="e.g. MCA"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-glass p-3">
+            <h6 class="mb-1">System Status</h6>
+            <div class="text-hint small mb-1">
+              Live feedback from registration & attendance actions.
+            </div>
+            <div id="status" class="fw-semibold"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const startCamBtn = document.getElementById("startCam");
+      const captureRegisterBtn = document.getElementById("captureRegister");
+      const captureAttendanceBtn = document.getElementById("captureAttendance");
+      const statusEl = document.getElementById("status");
+      const spinner = document.getElementById("attendanceSpinner");
+      const attendanceBtnLabel = document.getElementById("attendanceBtnLabel");
+
+      const themeToggle = document.getElementById("themeToggle");
+      const themeIcon = document.getElementById("themeIcon");
+      const themeLabel = document.getElementById("themeLabel");
+
+      let stream = null;
+
+      // THEME TOGGLE
+      function applyTheme(theme) {
+        document.body.setAttribute("data-theme", theme);
+        localStorage.setItem("ai-attendance-theme", theme);
+        if (theme === "dark") {
+          themeIcon.textContent = "🌙";
+          themeLabel.textContent = "Dark";
+        } else {
+          themeIcon.textContent = "☀️";
+          themeLabel.textContent = "Light";
+        }
+      }
+
+      const storedTheme =
+        localStorage.getItem("ai-attendance-theme") || "light";
+      applyTheme(storedTheme);
+
+      themeToggle.addEventListener("click", () => {
+        const current =
+          document.body.getAttribute("data-theme") === "dark"
+            ? "light"
+            : "dark";
+        applyTheme(current);
+      });
+
+      function setStatus(msg, ok = true) {
+        statusEl.innerHTML = "";
+        if (!msg) return;
+
+        const pill = document.createElement("div");
+        pill.className =
+          "status-pill " + (ok ? "status-ok-pill" : "status-error-pill");
+
+        const dot = document.createElement("span");
+        dot.textContent = ok ? "✅" : "⚠️";
+
+        const text = document.createElement("span");
+        text.textContent = msg;
+
+        pill.appendChild(dot);
+        pill.appendChild(text);
+        statusEl.appendChild(pill);
+      }
+
+      // Start webcam
+      startCamBtn.onclick = async () => {
+        try {
+          if (stream) {
+            setStatus("Camera already running.", true);
+            return;
+          }
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+          setStatus("Camera started. Ready to capture.", true);
+        } catch (err) {
+          console.error(err);
+          setStatus("Could not access camera: " + err.message, false);
+        }
+      };
+
+      // Utility: capture frame as Blob
+      function captureFrameAsBlob(callback) {
+        if (!stream) {
+          setStatus("Start the camera first.", false);
+          return;
+        }
+        const ctx = canvas.getContext("2d");
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 240;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            setStatus("Failed to capture image.", false);
+            return;
+          }
+          callback(blob);
+        }, "image/jpeg");
+      }
+
+      // Capture & Register
+      captureRegisterBtn.onclick = () => {
+        const name = document.getElementById("name").value.trim();
+        const rollNo = document.getElementById("rollNo").value.trim();
+        const className = document.getElementById("className").value.trim();
+
+        if (!name || !rollNo || !className) {
+          setStatus(
+            "Please fill Name, Roll No, and Class before registering.",
+            false
+          );
+          return;
+        }
+
+        captureFrameAsBlob(async (blob) => {
+          const formData = new FormData();
+          formData.append("name", name);
+          formData.append("rollNo", rollNo);
+          formData.append("className", className);
+          formData.append("faceImage", blob, "capture.jpg");
+
+          setStatus("Registering student...", true);
+          try {
+            const res = await fetch("/api/students/register", {
+              method: "POST",
+              body: formData,
+            });
+            const text = await res.text();
+            if (res.ok) {
+              setStatus(text || "Student registered successfully!", true);
+            } else {
+              setStatus("Error: " + text, false);
+            }
+          } catch (err) {
+            console.error(err);
+            setStatus("Request failed: " + err.message, false);
+          }
+        });
+      };
+
+      function setAttendanceLoading(loading) {
+        if (loading) {
+          spinner.classList.remove("d-none");
+          attendanceBtnLabel.textContent = "Marking...";
+          captureAttendanceBtn.disabled = true;
+        } else {
+          spinner.classList.add("d-none");
+          attendanceBtnLabel.textContent = "Capture & Mark Attendance";
+          captureAttendanceBtn.disabled = false;
+        }
+      }
+
+      // Capture & Mark Attendance
+      captureAttendanceBtn.onclick = () => {
+        captureFrameAsBlob(async (blob) => {
+          const formData = new FormData();
+          formData.append("faceImage", blob, "capture.jpg");
+
+          setStatus("Marking attendance...", true);
+          setAttendanceLoading(true);
+
+          try {
+            const res = await fetch("/api/students/mark-attendance", {
+              method: "POST",
+              body: formData,
+            });
+            const text = await res.text();
+            if (res.ok) {
+              setStatus(text || "Attendance marked!", true);
+            } else {
+              setStatus("Error: " + text, false);
+            }
+          } catch (err) {
+            console.error(err);
+            setStatus("Request failed: " + err.message, false);
+          } finally {
+            setAttendanceLoading(false);
+          }
+        });
+      };
+    </script>
+  </body>
+</html>

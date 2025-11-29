@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Register Student - AI Attendance</title>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      video,
+      canvas {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .row {
+        margin-bottom: 10px;
+      }
+      label {
+        display: inline-block;
+        width: 90px;
+      }
+      button {
+        margin-right: 10px;
+      }
+      #status {
+        margin-top: 15px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Register Student (Webcam)</h2>
+
+    <div class="row">
+      <label>Name:</label>
+      <input type="text" id="name" value="Test Student" />
+    </div>
+    <div class="row">
+      <label>Roll No:</label>
+      <input type="text" id="rollNo" value="MCA01" />
+    </div>
+    <div class="row">
+      <label>Class:</label>
+      <input type="text" id="className" value="MCA" />
+    </div>
+
+    <div class="row">
+      <video id="video" width="320" height="240" autoplay></video>
+      <canvas
+        id="canvas"
+        width="320"
+        height="240"
+        style="display: none"
+      ></canvas>
+    </div>
+
+    <div class="row">
+      <button id="startCam">Start Camera</button>
+      <button id="capture">Capture & Register</button>
+    </div>
+
+    <div id="status"></div>
+
+    <script>
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const startCamBtn = document.getElementById("startCam");
+      const captureBtn = document.getElementById("capture");
+      const statusEl = document.getElementById("status");
+
+      let stream = null;
+
+      // Start webcam
+      startCamBtn.onclick = async () => {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+          statusEl.textContent = "Camera started.";
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Could not access camera: " + err.message;
+        }
+      };
+
+      // Capture frame & send to backend
+      captureBtn.onclick = async () => {
+        if (!stream) {
+          statusEl.textContent = "Start the camera first.";
+          return;
+        }
+
+        const name = document.getElementById("name").value;
+        const rollNo = document.getElementById("rollNo").value;
+        const className = document.getElementById("className").value;
+
+        if (!name || !rollNo || !className) {
+          statusEl.textContent = "Fill all fields.";
+          return;
+        }
+
+        // Draw current frame to canvas
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert canvas to blob (image/jpeg)
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            statusEl.textContent = "Failed to capture image.";
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("name", name);
+          formData.append("rollNo", rollNo);
+          formData.append("className", className);
+          formData.append("faceImage", blob, "capture.jpg");
+
+          statusEl.textContent = "Uploading & registering...";
+
+          try {
+            const response = await fetch("/api/students/register", {
+              method: "POST",
+              body: formData,
+            });
+
+            const text = await response.text();
+
+            if (response.ok) {
+              statusEl.textContent = text; // "Student registered successfully!"
+            } else {
+              statusEl.textContent = "Error: " + text;
+            }
+          } catch (err) {
+            console.error(err);
+            statusEl.textContent = "Request failed: " + err.message;
+          }
+        }, "image/jpeg");
+      };
+    </script>
+  </body>
+</html>
