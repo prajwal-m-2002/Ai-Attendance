@@ -23,6 +23,22 @@
 
 ---
 
+## 📸 Screenshots
+
+### 🖥️ Dashboard — Register Students & Mark Attendance
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+### 📋 Attendance Log — Filter by Date
+
+![Attendance Log](docs/screenshots/attendance.png)
+
+### 🔌 Face Recognition API — Swagger UI
+
+![Face Recognition API Docs](docs/screenshots/api_docs.png)
+
+---
+
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
