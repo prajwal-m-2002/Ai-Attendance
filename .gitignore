@@ -13,3 +13,4 @@ spring-backend/target/
 # OS junk
 .DS_Store
 Thumbs.db
+*local.properties
