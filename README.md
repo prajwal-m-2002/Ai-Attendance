@@ -223,9 +223,8 @@ attendance
 ## 👤 Author
 
 **Prajwal**
-- GitHub: [@your-username](https://github.com/your-username)
-- LinkedIn: [your-linkedin](https://linkedin.com/in/your-profile)
-
+- GitHub: https://github.com/prajwal-m-2002
+- LinkedIn: https://www.linkedin.com/in/prajwalm2002/
 ---
 
 ## 📄 License
