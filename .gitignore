@@ -1,0 +1,15 @@
+# VS Code
+.vscode/
+
+# Python
+python-face-recognition/venv/
+__pycache__/
+*.pyc
+
+# Java / Maven
+spring-backend/target/
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
